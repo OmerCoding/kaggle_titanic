@@ -9,7 +9,7 @@ y = np.loadtxt(open("results.csv", "rb"), delimiter=",", skiprows=1)
 X_scale = StandardScaler()
 X = X_scale.fit_transform(data)
 
-nn_structure = [10,10,1]
+nn_structure = [10, 10, 1]
 
 
 def sigma(x):
@@ -91,7 +91,16 @@ def train_nn(nn_structure, X, y, iter_num=3000, alpha=0.25):
     return w, b, avg_cost_func
 
 
+def classification(X):
+    res = np.zeros((X.shape[0], 1))
+    for i in range(X.size):
+        if X[i] >= 0.5:
+            res[i] = 1
+    return res
+
+
 w, b, avg_cost_funct = train_nn(nn_structure, X, y)
+print("Iterations Completed.")
 
 
 plt.plot(avg_cost_funct)
@@ -99,5 +108,24 @@ plt.ylabel('Average J')
 plt.xlabel('Iteration number')
 plt.show()
 
+test = np.loadtxt(open("test.csv", "rb"), delimiter=",", skiprows=1)
+X_scale = StandardScaler()
+X_test = X_scale.fit_transform(test)
+X_test = np.concatenate((np.ones((X_test.shape[0],1)),X_test), axis=1)
 
-print(X.size)
+full_w = {}
+
+b[1] = b[1].reshape(b[1].shape[0], 1)
+b[2] = b[2].reshape(b[2].shape[0], 1)
+full_w[1] = np.concatenate((b[1], w[1]), axis=1)
+full_w[2] = np.concatenate((b[2], w[2]), axis=1)
+
+z_2 = np.dot(X_test, np.transpose(full_w[1]))
+h_2 = sigma(z_2)
+h_2 = np.concatenate((np.ones((h_2.shape[0], 1)), h_2), axis=1)
+z_3 = np.dot(h_2, np.transpose(full_w[2]))
+h_3 = sigma(z_3)
+
+results = classification(h_3)
+
+np.savetxt('test_res.csv', results, delimiter=",")
