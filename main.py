@@ -59,7 +59,7 @@ def calculate_hidden_delta(delta_plus_1, w_l, z_l):
     return np.dot(np.transpose(w_l), delta_plus_1) * sigma_deriv(z_l)
 
 
-def train_nn(nn_structure, X, y, iter_num=3000, alpha=0.25):
+def train_nn(nn_structure, X, y, iter_num=3000, alpha=0.25, lamb=0.01):
     w, b = setup_and_init_weights(nn_structure)
     cnt = 0
     m = len(y)
@@ -83,7 +83,7 @@ def train_nn(nn_structure, X, y, iter_num=3000, alpha=0.25):
                     tri_w[l] += np.dot(delta[l+1][:, np.newaxis], np.transpose(h[l][:, np.newaxis]))
                     tri_b[l] += delta[l+1]
         for l in range(len(nn_structure) - 1, 0, -1):
-            w[l] += -alpha * (1.0/m * tri_w[l])
+            w[l] += -alpha * (1.0/m * tri_w[l] + lamb * w[l])
             b[l] += -alpha * (1.0/m * tri_b[l])
         avg_cost = 1.0/m * avg_cost
         avg_cost_func.append(avg_cost)
@@ -128,4 +128,4 @@ h_3 = sigma(z_3)
 
 results = classification(h_3)
 
-np.savetxt('test_res.csv', results, delimiter=",")
+np.savetxt('test_res4.csv', results, delimiter=",")
