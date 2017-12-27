@@ -9,7 +9,7 @@ y = np.loadtxt(open("results.csv", "rb"), delimiter=",", skiprows=1)
 X_scale = StandardScaler()
 X = X_scale.fit_transform(data)
 
-nn_structure = [10, 10, 1]
+nn_structure = [10, 20, 1]
 
 
 def sigma(x):
@@ -59,7 +59,25 @@ def calculate_hidden_delta(delta_plus_1, w_l, z_l):
     return np.dot(np.transpose(w_l), delta_plus_1) * sigma_deriv(z_l)
 
 
-def train_nn(nn_structure, X, y, iter_num=3000, alpha=0.25, lamb=0.01):
+def full_ff(w, b, x):
+    x = np.concatenate((np.ones((x.shape[0], 1)), x), axis=1)
+    full_w = {}
+    for l in range(1, len(b) + 1):
+        b[l] = b[l].reshape(b[l].shape[0], 1)
+        full_w[l] = np.concatenate((b[l], w[l]), axis=1)
+
+    for l in range(1, len(w) + 1):
+        if l == 1:
+            node = x
+        else:
+            node = z
+        z = np.dot(node, np.transpose(full_w[l]))
+        z = sigma(z)
+        if l != len(w):
+            z = np.concatenate((np.ones((z.shape[0], 1)), z), axis=1)
+    return z
+
+def train_nn(nn_structure, X, y, iter_num=3000, alpha=0.25, lamb=0.001):
     w, b = setup_and_init_weights(nn_structure)
     cnt = 0
     m = len(y)
@@ -111,21 +129,10 @@ plt.show()
 test = np.loadtxt(open("test.csv", "rb"), delimiter=",", skiprows=1)
 X_scale = StandardScaler()
 X_test = X_scale.fit_transform(test)
-X_test = np.concatenate((np.ones((X_test.shape[0],1)),X_test), axis=1)
 
-full_w = {}
+test_feed_forward = full_ff(w, b, X_test)
 
-b[1] = b[1].reshape(b[1].shape[0], 1)
-b[2] = b[2].reshape(b[2].shape[0], 1)
-full_w[1] = np.concatenate((b[1], w[1]), axis=1)
-full_w[2] = np.concatenate((b[2], w[2]), axis=1)
 
-z_2 = np.dot(X_test, np.transpose(full_w[1]))
-h_2 = sigma(z_2)
-h_2 = np.concatenate((np.ones((h_2.shape[0], 1)), h_2), axis=1)
-z_3 = np.dot(h_2, np.transpose(full_w[2]))
-h_3 = sigma(z_3)
+results = classification(test_feed_forward)
 
-results = classification(h_3)
-
-np.savetxt('test_res4.csv', results, delimiter=",")
+np.savetxt('test_res5.csv', results, delimiter=",")
